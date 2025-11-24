@@ -30,7 +30,7 @@ public abstract class MessageClientBehavior : MonoBehaviour
     protected abstract void OnConnectionFailed(Exception e);
 
     // ----------------------
-    // Public send function
+    // Public send functions
     // ----------------------
     public void SendMessageString(string msg)
     {
@@ -44,6 +44,30 @@ public abstract class MessageClientBehavior : MonoBehaviour
         try
         {
             stream.Write(bytes, 0, bytes.Length);
+            stream.Flush();
+        }
+        catch (Exception e)
+        {
+            Debug.Log($"[MessageSender] Send failed: {e}");
+            connected = false;
+            Close();
+            TryConnect();
+        }
+    }
+
+    public void SendMessagePNG(byte[] pngBytes)
+    {
+        if (!connected){
+            TryConnect();
+            return;
+        }
+
+        byte[] lengthBytes = System.BitConverter.GetBytes(pngBytes.Length);
+
+        try
+        {
+            stream.Write(lengthBytes, 0, bytes.Length);
+            stream.Write(pngBytes, 0, bytes.Length);
             stream.Flush();
         }
         catch (Exception e)

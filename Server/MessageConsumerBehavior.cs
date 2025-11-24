@@ -5,9 +5,7 @@ using UnityEngine;
 public abstract class MessageConsumerBehavior : MonoBehaviour
 {
     [SerializeField] protected MessageProducerBehavior messageProducerBehavior;
-    
-    protected readonly Queue<string> messageQueue;
-    
+        
     void Start()
     {
         if (messageProducerBehavior == null)

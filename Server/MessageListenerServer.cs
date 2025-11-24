@@ -74,10 +74,5 @@ public class MessageListenerServer
         }
     }
 
-
-    public void Send(NetworkStream stream, string message)
-    {
-        byte[] bytes = Encoding.UTF8.GetBytes(message);
-        stream.Write(bytes, 0, bytes.Length);
-    }
+    
 }

@@ -2,6 +2,9 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using System.Collections;
+using System;
+using System.Net;
+using System.Net.Sockets;
 
 public class MessageProducerBehavior : MonoBehaviour
 {
@@ -19,6 +22,11 @@ public class MessageProducerBehavior : MonoBehaviour
         Debug.Log($"Server started on port {port}");
     }
     
+    public void HandleMessage(string line, TcpClient client)
+    {
+        Debug.Log($"Enqueueing line");
+        messageQueue.Enqueue(line);
+    }
     public void HandleMessage(string line)
     {
         Debug.Log($"Enqueueing line");
