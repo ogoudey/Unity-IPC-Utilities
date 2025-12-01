@@ -22,7 +22,6 @@ public abstract class Server : MonoBehaviour
     {
         listener = new TcpListener(IPAddress.Any, port);
         listener.Start();
-        Debug.Log($"TerrainTransmitter running on port {port}");
 
         serverThread = new Thread(ServerLoop);
         serverThread.Start();
@@ -43,7 +42,10 @@ public abstract class Server : MonoBehaviour
                 TcpClient client = listener.AcceptTcpClient();
                 HandleClient(client);
             }
-            catch (Exception) { }
+            catch (Exception)
+            {
+                Debug.Log("Oops!");
+            }
         }
     }
 
@@ -51,8 +53,15 @@ public abstract class Server : MonoBehaviour
  
     public void Send(NetworkStream stream, string msg)
     {
+        if (!stream.CanWrite)
+        {
+            Debug.LogError("Cannot write to stream: it might be closed.");
+            return;
+        }
+
         byte[] response = Encoding.UTF8.GetBytes($"{msg}");
         stream.Write(response, 0, response.Length);
+        stream.Flush();
     }
 
     public void SendHeadedMessage(NetworkStream stream, string json)

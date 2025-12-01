@@ -17,7 +17,7 @@ public abstract class MessageConsumerBehavior : MonoBehaviour
     protected virtual void Update()
     {
         if (messageProducerBehavior == null) return;
-        // Process messages on Unity's main thread
+
         while (messageProducerBehavior.messageQueue.Count > 0)
         {
             string msg = messageProducerBehavior.messageQueue.Dequeue();
