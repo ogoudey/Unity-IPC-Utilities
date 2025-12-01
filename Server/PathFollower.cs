@@ -39,7 +39,8 @@ public class PathFollower : Server
             px_i = float.Parse(coords[0]);
             pz_i = float.Parse(coords[1]);
             
-            SendHeadedMessage(stream, $"{px} {pz}\n");
+            //SendHeadedMessage(stream, $"{px} {pz}\n");
+            Send(stream, $"{px} {pz}\n");
             follow = true;
         }
 
@@ -56,10 +57,10 @@ public class PathFollower : Server
         {
             px = this.transform.position.x;
             pz = this.transform.position.z;
-            Debug.Log($"{px} {pz}");
             v_i = (float) Math.Sqrt(Math.Pow(px_i - px, 2) + Math.Pow(pz_i - pz, 2));
-            theta = (float) Math.Atan2(px_i - px, pz_i - pz) * (float) (180.0 / Math.PI);
-            Debug.Log($"{v_i} {theta}");
+            theta = Mathf.Atan2(px_i - px, pz_i - pz) * Mathf.Rad2Deg;
+            //theta = (float) Math.Atan2(px_i - px, pz_i - pz) * (float) (180.0 / Math.PI);
+            Debug.Log($"arctan({px_i} - {px}/{pz_i} - {pz}) = {Mathf.Atan2(px_i - px, pz_i - pz)} => {theta}");
             this.transform.rotation = Quaternion.Euler(0f, theta, 0f);
             this.transform.position += transform.forward * 1f * Time.deltaTime;
         }
