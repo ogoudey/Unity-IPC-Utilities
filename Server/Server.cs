@@ -37,15 +37,11 @@ public abstract class Server : MonoBehaviour
     {
         while (running)
         {
-            try
-            {
-                TcpClient client = listener.AcceptTcpClient();
-                HandleClient(client);
-            }
-            catch (Exception)
-            {
-                Debug.Log("Oops!");
-            }
+
+        TcpClient client = listener.AcceptTcpClient();
+        HandleClient(client);
+
+
         }
     }
 

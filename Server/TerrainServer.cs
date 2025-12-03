@@ -66,7 +66,7 @@ public class DestinationInfo
 public class TerrainServer : Server
 {   
     private float[,] cachedHeightmap;
-    private Transform[] cachedDestinations;
+    private DestinationsData cachedDestinationsData;
     private DestinationInfo cachedBoatInfo;
     
     private TcpListener listener;
@@ -79,11 +79,16 @@ public class TerrainServer : Server
     void Start()
     {
         cachedHeightmap = GetHeightMap();
-        cachedDestinations = GetDestinations();
         cachedBoatInfo = GetBoatInfo();
+        cachedDestinationsData = new DestinationsData(GetDestinations());
         StartServer();
     }
 
+    void Update()
+    {
+        cachedBoatInfo = GetBoatInfo();
+    }
+    
     protected override void HandleClient(TcpClient client)
     {
         Debug.Log("Request received");
@@ -107,8 +112,9 @@ public class TerrainServer : Server
             	if (message == "getdestinations")
             	{
             		Debug.Log("Getting destinations");
-            		DestinationsData data = new DestinationsData(cachedDestinations);
-            		string json = JsonUtility.ToJson(data);
+            		
+            		string json = JsonUtility.ToJson(cachedDestinationsData);
+            		Debug.Log(json);
             		SendHeadedMessage(stream, json);
             	}
             	else{
