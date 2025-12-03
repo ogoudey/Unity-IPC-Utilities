@@ -33,15 +33,54 @@ public class HeightmapData
     }
 }
 
+[Serializable]
+public class DestinationsData
+{
+    public DestinationInfo[] destinations;
+
+    public DestinationsData(Transform[] transforms)
+    {
+        destinations = new DestinationInfo[transforms.Length];
+        for (int i = 0; i < transforms.Length; i++)
+        {
+            destinations[i] = new DestinationInfo(transforms[i]);
+        }
+    }
+}
+
+[Serializable]
+public class DestinationInfo
+{
+    public string name;
+    public Vector3 position;
+    public Quaternion rotation;
+
+    public DestinationInfo(Transform t)
+    {
+        name = t.name;
+        position = t.position;
+        rotation = t.rotation;
+    }
+}
+
 public class TerrainServer : Server
 {   
     private float[,] cachedHeightmap;
+    private Transform[] cachedDestinations;
+    private DestinationInfo cachedBoatInfo;
+    
     private TcpListener listener;
     private Thread serverThread;
     private bool running = true;
+    
+    [SerializeField] private Transform[] destinations;
+    [SerializeField] private Transform boat;
+    
     void Start()
     {
         cachedHeightmap = GetHeightMap();
+        cachedDestinations = GetDestinations();
+        cachedBoatInfo = GetBoatInfo();
         StartServer();
     }
 
@@ -65,11 +104,40 @@ public class TerrainServer : Server
             }
             else
             {
-                Send(stream, "unknown command");
+            	if (message == "getdestinations")
+            	{
+            		Debug.Log("Getting destinations");
+            		DestinationsData data = new DestinationsData(cachedDestinations);
+            		string json = JsonUtility.ToJson(data);
+            		SendHeadedMessage(stream, json);
+            	}
+            	else{
+        	    if (message == "getboat")
+		    	{
+		    		Debug.Log("Getting boat coords");
+		    		
+		    		string json = JsonUtility.ToJson(cachedBoatInfo);
+		    		SendHeadedMessage(stream, json);
+		    	}
+		    	else{
+				Send(stream, "unknown command");
+		    	}
+            	}
+                
             }
         }
 
         client.Close();
+    }
+    
+    public DestinationInfo GetBoatInfo()
+    {
+    	return new DestinationInfo(boat);
+    }
+    
+    public Transform[] GetDestinations()
+    {
+    	return destinations;
     }
 
     public float[,] GetHeightMap()
