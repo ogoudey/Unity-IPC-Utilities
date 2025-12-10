@@ -40,7 +40,7 @@ public class MessageListenerServer
     public void StartServer()
     {
         running = true;
-        listener = new TcpListener(IPAddress.Loopback, port);
+        listener = new TcpListener(IPAddress.Any, port);
         listener.Start();
 
         listenerThread = new Thread(ListenLoop);
