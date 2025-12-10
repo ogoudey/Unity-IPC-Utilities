@@ -66,8 +66,8 @@ public abstract class MessageClientBehavior : MonoBehaviour
 
         try
         {
-            stream.Write(lengthBytes, 0, bytes.Length);
-            stream.Write(pngBytes, 0, bytes.Length);
+            stream.Write(lengthBytes, 0, lengthBytes.Length);
+            stream.Write(pngBytes, 0, pngBytes.Length);
             stream.Flush();
         }
         catch (Exception e)
