@@ -25,9 +25,10 @@ public class TextureProjector : MessageConsumerBehavior
         if (rawImage == null || string.IsNullOrEmpty(msg))
             return;
         
-        string[] parts = msg.Split(new[] { '\n' }, System.StringSplitOptions.RemoveEmptyEntries);
+        string[] parts = msg.Split('\n');
         foreach (var part in parts)
         {
+            if (!string.IsNullOrWhileSpace(part))
             ApplyFrame(part);
         }
     }
