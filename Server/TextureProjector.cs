@@ -27,7 +27,7 @@ public class TextureProjector : MessageLatestBehavior
             UnityEngine.Debug.LogError("[TextureProjector] Canvas object must have a RawImage component.");
     
         QualitySettings.vSyncCount = 0;
-        Application.targetFrameRate = 1;
+        Application.targetFrameRate = 60;
     }
 
     
