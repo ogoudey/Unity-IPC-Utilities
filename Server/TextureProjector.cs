@@ -28,12 +28,14 @@ public class TextureProjector : MessageLatestBehavior
 
     protected override void ProcessMessage(string msg)
     {
+
         if (string.IsNullOrWhiteSpace(msg)) return;
 
         // Remove trailing newline (if any)
         msg = msg.TrimEnd('\n', '\r');
 
         ApplyFrame(msg);
+
     }
 
     private void ApplyFrame(string msg)
