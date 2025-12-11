@@ -17,7 +17,7 @@ public class MessageListenerServer
     private Thread listenerThread;
     
     private bool running = false;
-
+    int frameCounter = 0;
     public Action<string> OnMessageReceived;
      
     public MessageListenerServer(int port)
@@ -61,8 +61,18 @@ public class MessageListenerServer
                     string line;
                     while (running && (line = reader.ReadLine()) != null)
                     {
+                        try
+                        {
+                            frameCounter++;
+                            if (frameCounter % 30 == 0)
+                                Debug.Log($"Received frame {frameCounter}");
 
-                        OnMessageReceived?.Invoke(line);
+                            OnMessageReceived?.Invoke(line);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.Log("Handling error");
+                        }
 
                     }
                 }

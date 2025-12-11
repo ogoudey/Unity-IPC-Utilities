@@ -1,6 +1,10 @@
 using UnityEngine;
 using UnityEngine.UI;
-public class TextureProjector : MessageConsumerBehavior
+using System; // This 'using' statement gives you access to System.Convert
+using System.Threading.Tasks;
+using System.Diagnostics;
+
+public class TextureProjector : MessageLatestBehavior
 {
     [SerializeField] private GameObject canvas;
 
@@ -11,48 +15,72 @@ public class TextureProjector : MessageConsumerBehavior
     {
         if (canvas == null)
         {
-            Debug.LogError("[TextureProjector] No canvas assigned.");
+            //UnityEngine.Debug.LogError("[TextureProjector] No canvas assigned.");
             return;
         }
 
         rawImage = canvas.GetComponent<RawImage>();
         if (rawImage == null)
-            Debug.LogError("[TextureProjector] Canvas object must have a RawImage component.");
+            UnityEngine.Debug.LogError("[TextureProjector] Canvas object must have a RawImage component.");
     }
 
     protected override void ProcessMessage(string msg)
     {
-        if (rawImage == null || string.IsNullOrEmpty(msg))
-            return;
-        
-        string[] parts = msg.Split('\n');
-        foreach (var part in parts)
-        {
-            if (!string.IsNullOrWhileSpace(part))
-            ApplyFrame(part);
-        }
+        if (string.IsNullOrWhiteSpace(msg)) return;
+
+        // Remove trailing newline (if any)
+        msg = msg.TrimEnd('\n', '\r');
+
+        ApplyFrame(msg);
     }
 
-    private void ApplyFrame(string part)
+    private void ApplyFrame(string msg)
     {
-        // Strip data URI prefix if present
-        int commaIndex = part.IndexOf(',');
-        if (commaIndex != -1 && part.StartsWith("data:"))
-            part = part.Substring(commaIndex + 1);
+        if (string.IsNullOrEmpty(msg))
+        return;
+        UnityEngine.Debug.Log($"Applying frame length {msg.Length}");
+        // Required: strip prefix if present
+        int comma = msg.IndexOf(',');
+        if (comma != -1)
+            msg = msg.Substring(comma + 1);
 
-        byte[] imageData = System.Convert.FromBase64String(part);
-
-        if (texture == null)
-            texture = new Texture2D(2, 2);
-
-        bool loaded = texture.LoadImage(imageData);
-        if (!loaded)
+        // Now msg starts with pure Base64 (must not include whitespace!)
+        msg = msg.Trim();
+        UnityEngine.Debug.Log($"Applying frame length {msg.Length}");
+        byte[] bytes;
+        try
         {
-            Debug.LogWarning("[TextureProjector] Failed to decode image.");
+            bytes = System.Convert.FromBase64String(msg); // THIS will now work
+        }
+        catch (Exception ex)
+        {
+            UnityEngine.Debug.Log($"Conversion failed.");
             return;
         }
-
+        if (texture == null)
+            texture = new Texture2D(2, 2);
+        texture.LoadImage(bytes);
         rawImage.texture = texture;
+    }
+
+    private void ApplyFrameAsync(string msg)
+    {
+        // Run decoding in a background thread
+        Task.Run(() =>
+        {
+            int comma = msg.IndexOf(',');
+            if (comma != -1) msg = msg.Substring(comma + 1);
+            byte[] bytes = Convert.FromBase64String(msg.Trim());
+
+            Texture2D tex = new Texture2D(2, 2);
+            tex.LoadImage(bytes);
+
+            // Push to main thread
+            lock (lockObj)
+            {
+                texture = tex; // overwrite previous
+            }
+        });
     }
 
     private void OnDestroy()
