@@ -15,11 +15,12 @@ public class MessageListenerServer
     private readonly int port;
     private TcpListener listener;
     private Thread listenerThread;
-    
+    public readonly object sharedLockObj = new object();
+    public string latestMessage = null;
     private bool running = false;
     int frameCounter = 0;
     public Action<string> OnMessageReceived;
-     
+
     public MessageListenerServer(int port)
     {
         this.port = port;
@@ -68,6 +69,49 @@ public class MessageListenerServer
             Debug.LogError($"Server error: {ex}");
         }
     }
+
+    private void ReadLoop(StreamReader reader)
+    {
+        StringBuilder buffer = new StringBuilder();
+        char[] chunk = new char[4096];
+
+        while (running)
+        {
+            int read = reader.Read(chunk, 0, chunk.Length);
+            if (read <= 0)
+                break;
+
+            buffer.Append(chunk, 0, read);
+
+            int newlineIndex;
+            while ((newlineIndex = IndexOfNewline(buffer)) >= 0)
+            {
+                // Extract one frame
+                string frame = buffer.ToString(0, newlineIndex);
+                buffer.Remove(0, newlineIndex + 1);
+
+                frameCounter++;
+                if (frameCounter % 1 == 0)
+                    Debug.Log($"Received frame {frameCounter}, len={frame.Length}");
+
+                lock (sharedLockObj)
+                {
+                    latestMessage = frame;  // overwrite only, no queue
+                    Debug.Log($"Changing {latestMessage.Length}");
+                }
+            }
+        }
+    }
+
+    private int IndexOfNewline(StringBuilder sb)
+    {
+        for (int i = 0; i < sb.Length; i++)
+            if (sb[i] == '\n')
+                return i;
+        return -1;
+    }
+
+
 
     private void ReadlineLoop(StreamReader reader)
     {

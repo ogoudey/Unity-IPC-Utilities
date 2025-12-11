@@ -8,9 +8,12 @@ public class TextureProjector : MessageLatestBehavior
 {
     [SerializeField] private GameObject canvas;
 
+            
+
     private RawImage rawImage;      // The component we draw to
     private Texture2D texture;      // Reused texture to avoid allocations
 
+    private int numFramesApplied = 1;
     private void Awake()
     {
         if (canvas == null)
@@ -22,6 +25,9 @@ public class TextureProjector : MessageLatestBehavior
         rawImage = canvas.GetComponent<RawImage>();
         if (rawImage == null)
             UnityEngine.Debug.LogError("[TextureProjector] Canvas object must have a RawImage component.");
+    
+        QualitySettings.vSyncCount = 0;
+        //Application.targetFrameRate = 1;
     }
 
     
@@ -30,7 +36,7 @@ public class TextureProjector : MessageLatestBehavior
     {
 
         if (string.IsNullOrWhiteSpace(msg)) return;
-
+        if (msg == null) return;
         // Remove trailing newline (if any)
         msg = msg.TrimEnd('\n', '\r');
 
@@ -42,7 +48,7 @@ public class TextureProjector : MessageLatestBehavior
     {
         if (string.IsNullOrEmpty(msg))
         return;
-        UnityEngine.Debug.Log($"Applying frame length {msg.Length}");
+        UnityEngine.Debug.Log($"Applying frame {numFramesApplied} of length {msg.Length}");
         // Required: strip prefix if present
         int comma = msg.IndexOf(',');
         if (comma != -1)
@@ -65,8 +71,9 @@ public class TextureProjector : MessageLatestBehavior
             texture = new Texture2D(2, 2);
         texture.LoadImage(bytes);
         rawImage.texture = texture;
+        numFramesApplied ++;
     }
-
+    /*
     private void ApplyFrameAsync(string msg)
     {
         // Run decoding in a background thread
@@ -80,12 +87,13 @@ public class TextureProjector : MessageLatestBehavior
             tex.LoadImage(bytes);
 
             // Push to main thread
-            lock (lockObj)
+            lock (server.sharedLockObj)
             {
                 texture = tex; // overwrite previous
             }
         });
     }
+    */
 
     private void OnDestroy()
     {

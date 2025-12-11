@@ -10,48 +10,61 @@ public abstract class MessageLatestBehavior : MonoBehaviour
 {
     [SerializeField] private int port = 5000;
 
-    private MessageListenerServer server;
-    
-    public string latestMessage = null;
-    protected readonly object lockObj = new object();
-    
+    private int updates = 0;
+    protected MessageListenerServer server;
+        
     void Start()
     {
         server = new MessageListenerServer(port);
-        server.OnMessageReceived += HandleMessage;
+        //server.OnMessageReceived += HandleMessage;
         server.Start();
         //Debug.Log($"Server started on port {port}");
     }
     
+    /*
     public void HandleMessage(string line)
     {
         //Debug.Log("Attempting handle");
-        lock (lockObj)
+        lock (server.sharedLockObj)
         {
             //Debug.Log($"Handling: {line}");
    
             latestMessage = line;  // overwrite old frames
         }
-    }
+    }*/
 
     protected virtual void Update()
     {
+        updates++;
+        if (updates % 10 != 0){
+            
+            Debug.Log($"Update # {updates}");
+            return;
+        }
+        
         string frameToApply = null;
 
-        lock (lockObj)
+        
+        if (server.latestMessage != null)
         {
-            if (latestMessage != null)
-            {
-                //Debug.Log($"Setting frame to apply to: {latestMessage}");
-                frameToApply = latestMessage;
-                latestMessage = null;         // consume exactly one per frame
+            //Debug.Log($"Setting frame to apply to: {latestMessage}");
+            
+            lock (server.sharedLockObj)
+            {   
+                frameToApply = server.latestMessage;
+                Debug.Log($"Change to latestMessage {updates.ToString()}");
+                server.latestMessage = null;        // consume exactly one per frame
+                
+            }
+            Debug.Log($"We just nullified {server.latestMessage}");
+            if (frameToApply != null)
                 ProcessMessage(frameToApply);
-            }
-            else
-            {
-                //Debug.Log("Latest message is null");
-            }
         }
+        else
+        {
+            //Debug.Log("Latest message is null");
+        }
+        
         
     }
     
