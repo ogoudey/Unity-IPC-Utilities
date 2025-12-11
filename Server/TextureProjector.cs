@@ -48,31 +48,31 @@ public class TextureProjector : MessageLatestBehavior
     {
         if (string.IsNullOrEmpty(msg))
         return;
-        UnityEngine.Debug.Log($"Applying frame {numFramesApplied} of length {msg.Length}");
+        UnityEngine.Debug.Log($"Applying frame {numFramesApplied} of hash {msg.GetHashCode()}");
         // Required: strip prefix if present
         int comma = msg.IndexOf(',');
         if (comma != -1)
             msg = msg.Substring(comma + 1);
 
-        // Now msg starts with pure Base64 (must not include whitespace!)
         msg = msg.Trim();
-        UnityEngine.Debug.Log($"Applying frame length {msg.Length}");
-        byte[] bytes;
-        try
-        {
-            bytes = System.Convert.FromBase64String(msg); // THIS will now work
-        }
-        catch (Exception ex)
-        {
-            UnityEngine.Debug.Log($"Conversion failed.");
-            return;
-        }
-        if (texture == null)
-            texture = new Texture2D(2, 2);
-        texture.LoadImage(bytes);
-        rawImage.texture = texture;
-        numFramesApplied ++;
+        byte[] bytes = Convert.FromBase64String(msg);
+
+        // ALWAYS create a new texture
+        Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+
+        tex.LoadImage(bytes);       // decode PNG
+        rawImage.texture = tex;     // assign new texture
+
+        // free old one
+        if (texture != null)
+            Destroy(texture);
+
+        texture = tex;
+        numFramesApplied++;
+
     }
+
+    
     /*
     private void ApplyFrameAsync(string msg)
     {

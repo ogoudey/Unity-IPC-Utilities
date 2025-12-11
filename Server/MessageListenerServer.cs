@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 using System.Net.Http;
 using System.IO;
 using System.Collections;
-
+using System.Collections.Concurrent;
 public class MessageListenerServer
 {
     private readonly int port;
@@ -97,7 +97,7 @@ public class MessageListenerServer
                 lock (sharedLockObj)
                 {
                     latestMessage = frame;  // overwrite only, no queue
-                    Debug.Log($"Changing {latestMessage.Length}");
+                    Debug.Log($"Changing to (hash) {latestMessage.GetHashCode()}");
                 }
             }
         }
