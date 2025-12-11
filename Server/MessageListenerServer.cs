@@ -58,29 +58,35 @@ public class MessageListenerServer
                 using (NetworkStream stream = client.GetStream())
                 using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
                 {
-                    string line;
-                    while (running && (line = reader.ReadLine()) != null)
-                    {
-                        try
-                        {
-                            frameCounter++;
-                            if (frameCounter % 30 == 0)
-                                Debug.Log($"Received frame {frameCounter}");
-                            Debug.Log($"ReadLine() returned {line.Length} chars");
-                            OnMessageReceived?.Invoke(line);
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.Log("Handling error");
-                        }
-
-                    }
+                    ReadLoop(reader);
+                    //ReadlineLoop(reader);
                 }
             }
         }
         catch (Exception ex)
         {
             Debug.LogError($"Server error: {ex}");
+        }
+    }
+
+    private void ReadlineLoop(StreamReader reader)
+    {
+        string line;
+        while (running && (line = reader.ReadLine()) != null)
+        {
+            try
+            {
+                frameCounter++;
+                if (frameCounter % 30 == 0)
+                    Debug.Log($"Received frame {frameCounter}");
+                Debug.Log($"ReadLine() returned {line.Length} chars");
+                OnMessageReceived?.Invoke(line);
+            }
+            catch (Exception ex)
+            {
+                Debug.Log("Handling error");
+            }
+
         }
     }
 
