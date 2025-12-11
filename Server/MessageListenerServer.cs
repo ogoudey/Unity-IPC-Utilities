@@ -66,7 +66,7 @@ public class MessageListenerServer
                             frameCounter++;
                             if (frameCounter % 30 == 0)
                                 Debug.Log($"Received frame {frameCounter}");
-
+                            Debug.Log($"ReadLine() returned {line.Length} chars");
                             OnMessageReceived?.Invoke(line);
                         }
                         catch (Exception ex)

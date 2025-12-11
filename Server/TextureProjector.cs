@@ -24,6 +24,8 @@ public class TextureProjector : MessageLatestBehavior
             UnityEngine.Debug.LogError("[TextureProjector] Canvas object must have a RawImage component.");
     }
 
+    
+
     protected override void ProcessMessage(string msg)
     {
         if (string.IsNullOrWhiteSpace(msg)) return;
