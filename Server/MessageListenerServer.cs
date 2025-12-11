@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.IO;
 using System.Collections;
 using System.Collections.Concurrent;
+
 public class MessageListenerServer
 {
     private readonly int port;
@@ -17,6 +18,7 @@ public class MessageListenerServer
     private Thread listenerThread;
     public readonly object sharedLockObj = new object();
     public string latestMessage = null;
+    public ConcurrentQueue<string> frameQueue = new ConcurrentQueue<string>();
     private bool running = false;
     int frameCounter = 0;
     public Action<string> OnMessageReceived;
@@ -57,12 +59,15 @@ public class MessageListenerServer
             {
                 using (TcpClient client = listener.AcceptTcpClient())
                 using (NetworkStream stream = client.GetStream())
-                using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+                //using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
                 {
-                    ReadLoop(reader);
+                    ReadLoop(stream);
+                    //ReadLoop(reader);
                     //ReadlineLoop(reader);
                 }
             }
+            
+            
         }
         catch (Exception ex)
         {
@@ -70,36 +75,34 @@ public class MessageListenerServer
         }
     }
 
-    private void ReadLoop(StreamReader reader)
+    private void ReadLoop(NetworkStream stream)
     {
-        StringBuilder buffer = new StringBuilder();
-        char[] chunk = new char[4096];
-
+        byte[] lenBytes = new byte[4];
         while (running)
         {
-            int read = reader.Read(chunk, 0, chunk.Length);
-            if (read <= 0)
-                break;
+            // Read 4-byte length header
+            int readLen = 0;
+            while (readLen < 4)
+                readLen += stream.Read(lenBytes, readLen, 4 - readLen);
+            Array.Reverse(lenBytes);  // reverses array in place
+            int frameLength = BitConverter.ToInt32(lenBytes, 0);
+            // Read the exact frame data
+            byte[] frameBytes = new byte[frameLength];
+            int offset = 0;
+            while (offset < frameLength)
+                offset += stream.Read(frameBytes, offset, frameLength - offset);
 
-            buffer.Append(chunk, 0, read);
+            string frame = Encoding.UTF8.GetString(frameBytes);
 
-            int newlineIndex;
-            while ((newlineIndex = IndexOfNewline(buffer)) >= 0)
+            frameCounter++;
+            int hash = frame.GetHashCode();
+            Debug.Log($"Received frame {frameCounter}, len={frame.Length}, hash={hash}");
+
+            lock (sharedLockObj)
             {
-                // Extract one frame
-                string frame = buffer.ToString(0, newlineIndex);
-                buffer.Remove(0, newlineIndex + 1);
-
-                frameCounter++;
-                if (frameCounter % 1 == 0)
-                    Debug.Log($"Received frame {frameCounter}, len={frame.Length}");
-
-                lock (sharedLockObj)
-                {
-                    latestMessage = frame;  // overwrite only, no queue
-                    Debug.Log($"Changing to (hash) {latestMessage.GetHashCode()}");
-                }
+                frameQueue.Enqueue(frame);  // latest-frame logic can discard old ones later
             }
+            
         }
     }
 

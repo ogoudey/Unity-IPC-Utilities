@@ -36,7 +36,7 @@ public abstract class MessageLatestBehavior : MonoBehaviour
     protected virtual void Update()
     {
         updates++;
-        if (updates % 10 != 0){
+        if (updates % 3 != 0){
             
             Debug.Log($"Update # {updates}");
             return;
@@ -44,26 +44,20 @@ public abstract class MessageLatestBehavior : MonoBehaviour
         
         string frameToApply = null;
 
-        
-        if (server.latestMessage != null)
+        Debug.Log($"[Dequeue] Applying frame, queue size before: {server.frameQueue.Count}");
+        // Discard all but the newest frame
+        lock (server.sharedLockObj)
         {
-            //Debug.Log($"Setting frame to apply to: {latestMessage}");
-            
-            lock (server.sharedLockObj)
-            {   
-                frameToApply = server.latestMessage;
-                Debug.Log($"Change to latestMessage {updates.ToString()}");
-                server.latestMessage = null;        // consume exactly one per frame
-                
-            }
-            Debug.Log($"We just nullified {server.latestMessage}");
-            if (frameToApply != null)
-                ProcessMessage(frameToApply);
+            while (server.frameQueue.Count > 1)
+                server.frameQueue.TryDequeue(out _);
+
+            if (server.frameQueue.TryDequeue(out var frame))
+                frameToApply = frame;
         }
-        else
-        {
-            //Debug.Log("Latest message is null");
-        }
+
+        if (frameToApply != null)
+            Debug.Log($"[Dequeue] Applying frame, queue size after: {server.frameQueue.Count}");
+            ProcessMessage(frameToApply);
         
         
     }
