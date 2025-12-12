@@ -96,7 +96,7 @@ public class MessageListenerServer
 
             frameCounter++;
             int hash = frame.GetHashCode();
-            Debug.Log($"Received frame {frameCounter}, len={frame.Length}, hash={hash}");
+            //Debug.Log($"Received frame {frameCounter}, len={frame.Length}, hash={hash}");
 
             lock (sharedLockObj)
             {

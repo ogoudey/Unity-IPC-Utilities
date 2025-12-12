@@ -30,7 +30,7 @@ public class TransformGripperData
 
 public class TransformGripperClient : MessageClientBehavior
 {      
-    
+    private int transformsSent = 1;
     protected override void OnConnected()
     {
         Debug.Log("[DebugMessageSender] Connected to Python.");
@@ -40,14 +40,17 @@ public class TransformGripperClient : MessageClientBehavior
     protected override void OnConnectionFailed(Exception e)
     {
         // Wasting the stream but it's whatevs
-        //Debug.LogError($"[DebugMessageSender] Connection failed: {e.Message}");
+        Debug.LogError($"[DebugMessageSender] Connection failed: {e.Message}");
     }
 
     void Update()
     {
-        TransformGripperData data = new TransformGripperData(this.transform);
-        string json = JsonUtility.ToJson(data);
-        Debug.Log(json);
-        SendMessageString($"{json}");
+        if (transformsSent % 2 == 1)
+        {
+            TransformGripperData data = new TransformGripperData(this.transform);
+            string json = JsonUtility.ToJson(data);
+            Debug.Log(json);
+            SendMessageString($"{json}");   
+        }
     }
 }

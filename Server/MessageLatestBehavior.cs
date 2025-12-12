@@ -44,7 +44,7 @@ public abstract class MessageLatestBehavior : MonoBehaviour
         
         string frameToApply = null;
 
-        Debug.Log($"[Dequeue] Applying frame, queue size before: {server.frameQueue.Count}");
+        //Debug.Log($"[Dequeue] Applying frame, queue size before: {server.frameQueue.Count}");
         // Discard all but the newest frame
         lock (server.sharedLockObj)
         {
@@ -56,7 +56,7 @@ public abstract class MessageLatestBehavior : MonoBehaviour
         }
 
         if (frameToApply != null)
-            Debug.Log($"[Dequeue] Applying frame, queue size after: {server.frameQueue.Count}");
+            //Debug.Log($"[Dequeue] Applying frame, queue size after: {server.frameQueue.Count}");
             ProcessMessage(frameToApply);
         
         

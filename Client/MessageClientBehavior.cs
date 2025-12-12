@@ -2,17 +2,20 @@ using UnityEngine;
 using System;
 using System.Net.Sockets;
 using System.Text;
+using System.Diagnostics;
 
 public abstract class MessageClientBehavior : MonoBehaviour
 {
     [Header("Connection Settings")]
-    [SerializeField] protected string host = "127.0.0.1";
-    [SerializeField] protected int port = 5000;
+    [SerializeField] protected string host = "192.168.0.211";
+    [SerializeField] protected int port = 5002;
 
     protected TcpClient client;
     protected NetworkStream stream;
     protected bool connected = false;
 
+    private int sentStringMessages = 0;
+    private int failedStringMessages = 0;
     protected virtual void Start()
     {
         TryConnect();
@@ -45,19 +48,25 @@ public abstract class MessageClientBehavior : MonoBehaviour
         {
             stream.Write(bytes, 0, bytes.Length);
             stream.Flush();
+
+            sentStringMessages++;
+            
         }
         catch (Exception e)
         {
-            Debug.Log($"[MessageSender] Send failed: {e}");
-            connected = false;
-            Close();
-            TryConnect();
+            UnityEngine.Debug.Log($"[MessageSender] Send failed: {e}");
+            //connected = false;
+            //Close();
+            //TryConnect();
+            failedStringMessages++;
         }
+        UnityEngine.Debug.Log($"Sent messages: {sentStringMessages}, failedStringMessages: {failedStringMessages}");
     }
 
     public void SendMessagePNG(byte[] pngBytes)
     {
         if (!connected){
+            UnityEngine.Debug.Log("Reconnecting!");
             TryConnect();
             return;
         }
@@ -72,10 +81,10 @@ public abstract class MessageClientBehavior : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.Log($"[MessageSender] Send failed: {e}");
-            connected = false;
-            Close();
-            TryConnect();
+            UnityEngine.Debug.Log($"[MessageSender] Send failed: {e}");
+            //connected = false;
+            //Close();
+            //TryConnect();
         }
     }
 
@@ -108,7 +117,7 @@ public abstract class MessageClientBehavior : MonoBehaviour
             client?.Close();
         }
         catch { }
-        Debug.Log("Connection closed");
+        UnityEngine.Debug.Log("Connection closed");
         connected = false;
     }
 }
