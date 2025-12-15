@@ -16,9 +16,19 @@ public abstract class MessageClientBehavior : MonoBehaviour
 
     private int sentStringMessages = 0;
     private int failedStringMessages = 0;
+
+
+    private VR_UI ui;
     protected virtual void Start()
     {
         TryConnect();
+    }
+
+    void Awake()
+    {
+        ui = FindObjectOfType<VR_UI>();
+        UnityEngine.Debug.Log(ui);
+        ui.SetClientConnected(connected);
     }
 
     protected virtual void OnDestroy()
@@ -60,7 +70,7 @@ public abstract class MessageClientBehavior : MonoBehaviour
             //TryConnect();
             failedStringMessages++;
         }
-        UnityEngine.Debug.Log($"Sent messages: {sentStringMessages}, failedStringMessages: {failedStringMessages}");
+        //UnityEngine.Debug.Log($"Sent messages: {sentStringMessages}, failedStringMessages: {failedStringMessages}");
     }
 
     public void SendMessagePNG(byte[] pngBytes)
@@ -99,7 +109,7 @@ public abstract class MessageClientBehavior : MonoBehaviour
             client.Connect(host, port);
             stream = client.GetStream();
             connected = true;
-
+            ui.SetClientConnected(connected);
             OnConnected();
         }
         catch (Exception e)

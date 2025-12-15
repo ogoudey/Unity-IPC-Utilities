@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using UnityEngine;
+using Valve.VR;
+using System.Diagnostics;
 
 [Serializable]
 public class TransformGripperData
@@ -10,7 +12,8 @@ public class TransformGripperData
     public float rx, ry, rz, rw;
     public float sx, sy, sz;
 
-    public TransformGripperData(Transform t)
+    public float gripper;
+    public TransformGripperData(Transform t, float squeeze)
     {
         px = t.position.x;
         py = t.position.y;
@@ -24,6 +27,8 @@ public class TransformGripperData
         sx = t.localScale.x;
         sy = t.localScale.y;
         sz = t.localScale.z;
+
+        gripper = squeeze;
     }
 }
 
@@ -31,26 +36,33 @@ public class TransformGripperData
 public class TransformGripperClient : MessageClientBehavior
 {      
     private int transformsSent = 1;
+
+    
     protected override void OnConnected()
     {
-        Debug.Log("[DebugMessageSender] Connected to Python.");
+        UnityEngine.Debug.Log("[DebugMessageSender] Connected to Python.");
         SendMessageString("{\"hello\": \"python\"}");
     }
 
     protected override void OnConnectionFailed(Exception e)
     {
         // Wasting the stream but it's whatevs
-        Debug.LogError($"[DebugMessageSender] Connection failed: {e.Message}");
+        UnityEngine.Debug.LogError($"[DebugMessageSender] Connection failed: {e.Message}");
     }
 
     void Update()
     {
-        if (transformsSent % 2 == 1)
+        if (transformsSent % 1 == 0)
         {
-            TransformGripperData data = new TransformGripperData(this.transform);
+            float squeezeRight = SteamVR_Actions.default_Squeeze.GetAxis(
+                SteamVR_Input_Sources.RightHand
+            );
+
+            TransformGripperData data = new TransformGripperData(this.transform, squeezeRight);
             string json = JsonUtility.ToJson(data);
-            Debug.Log(json);
+            //UnityEngine.Debug.Log(json);
             SendMessageString($"{json}");   
         }
+        transformsSent ++;
     }
 }
