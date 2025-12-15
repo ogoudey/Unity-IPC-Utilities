@@ -12,12 +12,21 @@ public abstract class MessageLatestBehavior : MonoBehaviour
 
     private int updates = 0;
     protected MessageListenerServer server;
+    private bool serverOn = false;
+    private VR_UI ui;
+    private void Awake()
+    {
         
+    }
+
     void Start()
     {
+        ui = FindObjectOfType<VR_UI>();
+        UnityEngine.Debug.Log(ui);
         server = new MessageListenerServer(port);
         //server.OnMessageReceived += HandleMessage;
         server.Start();
+        ui.ServerHasClient();
         //Debug.Log($"Server started on port {port}");
     }
     
@@ -38,12 +47,18 @@ public abstract class MessageLatestBehavior : MonoBehaviour
         updates++;
         if (updates % 3 != 0){
             
-            Debug.Log($"Update # {updates}");
+            //Debug.Log($"Update # {updates}");
             return;
         }
         
         string frameToApply = null;
 
+        if (server.clientIP != null)
+        {
+            if (!serverOn)
+                serverOn = true;
+                ui.ServerHasClient(server.clientIP, server.clientPort);
+        }
         //Debug.Log($"[Dequeue] Applying frame, queue size before: {server.frameQueue.Count}");
         // Discard all but the newest frame
         lock (server.sharedLockObj)

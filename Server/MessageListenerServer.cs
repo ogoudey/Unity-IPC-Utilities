@@ -23,6 +23,13 @@ public class MessageListenerServer
     int frameCounter = 0;
     public Action<string> OnMessageReceived;
 
+    public string clientIP = null;
+    public int clientPort = 0;
+
+    void Awake()
+    {
+        //missed
+    }
     public MessageListenerServer(int port)
     {
         this.port = port;
@@ -61,6 +68,10 @@ public class MessageListenerServer
                 using (NetworkStream stream = client.GetStream())
                 //using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
                 {
+                    clientIP = ((System.Net.IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+                    clientPort = ((System.Net.IPEndPoint)client.Client.RemoteEndPoint).Port;
+
+                    Debug.Log($"Client connected: {clientIP}:{clientPort}");
                     ReadLoop(stream);
                     //ReadLoop(reader);
                     //ReadlineLoop(reader);

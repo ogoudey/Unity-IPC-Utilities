@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System; // This 'using' statement gives you access to System.Convert
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Net.Security;
 
 public class TextureProjector : MessageLatestBehavior
 {
@@ -13,9 +14,11 @@ public class TextureProjector : MessageLatestBehavior
     private RawImage rawImage;      // The component we draw to
     private Texture2D texture;      // Reused texture to avoid allocations
 
+    private VR_UI ui;
     private int numFramesApplied = 1;
     private void Awake()
-    {
+    {   
+
         if (canvas == null)
         {
             //UnityEngine.Debug.LogError("[TextureProjector] No canvas assigned.");
