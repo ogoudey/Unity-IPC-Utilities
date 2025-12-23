@@ -15,18 +15,13 @@ public class TransformGripperData
     public float gripper;
     public TransformGripperData(Transform t, float squeeze)
     {
-        px = t.position.x;
-        py = t.position.y;
-        pz = t.position.z;
+        px = t.localPosition.x;
+        py = t.localPosition.y;
+        pz = t.localPosition.z;
 
-        rx = t.rotation.x;
-        ry = t.rotation.y;
-        rz = t.rotation.z;
-        rw = t.rotation.w;
-
-        sx = t.localScale.x;
-        sy = t.localScale.y;
-        sz = t.localScale.z;
+        rx = t.localEulerAngles.x;
+        ry = t.localEulerAngles.y;
+        rz = t.localEulerAngles.z;
 
         gripper = squeeze;
     }
@@ -58,9 +53,14 @@ public class TransformGripperClient : MessageClientBehavior
                 SteamVR_Input_Sources.RightHand
             );
 
+            // Get other inputs to send {"message": "do thing"}
+
             TransformGripperData data = new TransformGripperData(this.transform, squeezeRight);
             string json = JsonUtility.ToJson(data);
-            //UnityEngine.Debug.Log(json);
+            if (transformsSent % 10 == 0)
+            {
+                UnityEngine.Debug.Log(json);
+            }
             SendMessageString($"{json}");   
         }
         transformsSent ++;
