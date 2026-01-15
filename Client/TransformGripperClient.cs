@@ -49,11 +49,30 @@ public class TransformGripperClient : MessageClientBehavior
     {
         if (transformsSent % 1 == 0)
         {
+            // Get other inputs to send {"message": "do thing"}
+
+            if (SteamVR_Actions.default_MenuPress.GetStateDown(SteamVR_Input_Sources.RightHand)) { // Select - the three horizontal lines - is pressed
+                string jsonGo = $"{{\"message\": \"go\"}}";
+                UnityEngine.Debug.Log(jsonGo);
+                SendMessageString($"{jsonGo}");
+                return;
+            }
+
+            if (SteamVR_Actions.default_SystemPress.GetStateDown(SteamVR_Input_Sources.RightHand)) { // Exit -  the button below the touchpad - is pressed
+                string jsonStop = $"{{\"message\": \"stop\"}}";
+                UnityEngine.Debug.Log(jsonStop);
+                SendMessageString($"{jsonStop}");
+                return;
+            }
+
             float squeezeRight = SteamVR_Actions.default_Squeeze.GetAxis(
                 SteamVR_Input_Sources.RightHand
             );
+            // Other: send the transform...
 
-            // Get other inputs to send {"message": "do thing"}
+            
+
+
 
             TransformGripperData data = new TransformGripperData(this.transform, squeezeRight);
             string json = JsonUtility.ToJson(data);
