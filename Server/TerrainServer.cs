@@ -7,15 +7,15 @@ using UnityEngine;
 using System.Collections.Generic;
 
 [Serializable]
-public class HeightmapData
+public class HeightmapGrid
 {
-     public int width;
+    public int width;
     public int height;
     public float[] data;
 
     
 
-    public HeightmapData(float[,] arr)
+    public HeightmapGrid(float[,] arr)
     {
         int w = arr.GetLength(0);
         int h = arr.GetLength(1);
@@ -32,6 +32,61 @@ public class HeightmapData
         data = flat;
     }
 }
+
+public static class MeshHeightmapJson
+{
+    // Converts a mesh to JSON like: { "1.500": { "5.200": 2.0, "5.100": 2.2 }, ... }
+    public static string MeshToCompactJson(Mesh mesh, Transform meshTransform = null)
+    {
+        // Step 1: collect into dictionary
+        var dict = new Dictionary<string, Dictionary<string, float>>();
+
+        foreach (var v in mesh.vertices)
+        {
+            Vector3 vertex = v;
+            if (meshTransform != null)
+                vertex = meshTransform.localToWorldMatrix.MultiplyPoint3x4(v);
+
+            string xKey = vertex.x.ToString("F3");
+            string zKey = vertex.z.ToString("F3");
+
+            if (!dict.ContainsKey(xKey))
+                dict[xKey] = new Dictionary<string, float>();
+
+            dict[xKey][zKey] = vertex.y;
+        }
+
+        // Step 2: manually serialize to JSON
+        var sb = new StringBuilder();
+        sb.Append("{");
+
+        bool firstX = true;
+        foreach (var xKvp in dict)
+        {
+            if (!firstX) sb.Append(",");
+            firstX = false;
+
+            sb.Append("\"").Append(xKvp.Key).Append("\":{");
+
+            bool firstZ = true;
+            foreach (var zKvp in xKvp.Value)
+            {
+                if (!firstZ) sb.Append(",");
+                firstZ = false;
+
+                sb.Append("\"").Append(zKvp.Key).Append("\":").Append(zKvp.Value.ToString("F3"));
+            }
+
+            sb.Append("}");
+        }
+
+        sb.Append("}");
+        return sb.ToString();
+    }
+}
+
+
+
 
 [Serializable]
 public class DestinationsData
@@ -65,7 +120,7 @@ public class DestinationInfo
 
 public class TerrainServer : Server
 {   
-    private float[,] cachedHeightmap;
+    private string cachedHeightmap;
     private DestinationsData cachedDestinationsData;
     private DestinationInfo cachedBoatInfo;
     
@@ -102,10 +157,9 @@ public class TerrainServer : Server
             if (message == "getheightmap")
             {
                 Debug.Log("Getting heightmap");
-                HeightmapData data = new HeightmapData(cachedHeightmap);
-                string json = JsonUtility.ToJson(data);
-                Debug.Log(json);
-                SendHeadedMessage(stream, json);
+                
+                Debug.Log(cachedHeightmap);
+                SendHeadedMessage(stream, cachedHeightmap);
             }
             else
             {
@@ -146,14 +200,16 @@ public class TerrainServer : Server
     	return destinations;
     }
 
-    public float[,] GetHeightMap()
+    public string GetHeightMap()
     {
         Terrain terrain = GetComponent<Terrain>();
 
         if (terrain == null)
         {
-            Debug.LogError("Terrain reference is null.");
-            return null;
+            MeshFilter mf = GetComponentInChildren<MeshFilter>();
+            Mesh mesh = mf.mesh;
+
+            return MeshHeightmapJson.MeshToCompactJson(mesh, mf.transform);
         }
 
         TerrainData terrainData = terrain.terrainData;
@@ -174,6 +230,7 @@ public class TerrainServer : Server
         );
 
         Debug.Log($"Extracted height map: {resolution} × {resolution}");
-        return heights;
+        HeightmapGrid data = new HeightmapGrid(heights);
+        return JsonUtility.ToJson(data);
     }
 }
