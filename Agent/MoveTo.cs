@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 [RequireComponent(typeof(NavMeshAgent))]
 public class MoveTo : MonoBehaviour
@@ -18,6 +19,14 @@ public class MoveTo : MonoBehaviour
     private NavMeshAgent agent;
     private Transform lastGoal;
 
+
+    // Communication
+    public int port = 5000;
+    private JsonTcpServer server;
+    private ConcurrentQueue<InputMsg> inboundMessageQueue = new();
+    private ConcurrentQueue<OutputMsg> outboundMessageQueue = new();
+    // end Communication
+
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -29,14 +38,43 @@ public class MoveTo : MonoBehaviour
         destinations.Clear();
         foreach (var obj in GameObject.FindGameObjectsWithTag(destinationTag))
         {
-            destinations.Add(obj.transform);
+            destinations.Add(obj.transform); // should be obj.name
         }
 
         ForceRepath();
+        // Communication
+        server = new JsonTcpServer(port, outboundMessageQueue);
+        server.OnMessageReceived += msg =>
+        {
+            // background thread → queue
+            inboundMessageQueue.Enqueue(msg);
+        };
+        server.Start();
+    }
+
+    string getDestinations()
+    {
+        return destinations.ToString();
     }
 
     void Update()
     {
+        // Communications
+        while (inboundMessageQueue.TryDequeue(out var msg))
+        {
+            Debug.Log($"Received func={msg.func}, y={msg.arg}");
+            if (msg.x == "updateGoal")
+            {
+                currentGoal = msg.y;
+                outboundMessageQueue.enqueue(new OutputMsg { type = "status", content = "Goal updated" });
+            }
+            if (msg.x == "getDestinations")
+            {
+                outboundMessageQueue.enqueue(new OutputMsg { type = "destinations", content = getDestinations() });
+            }
+        }
+
+
         if (currentGoal == null)
             return;
 
@@ -81,5 +119,5 @@ public class MoveTo : MonoBehaviour
     private void OnReachedGoal()
     {
         // Hook for patrol / idle / next goal
-    }
+    } 
 }
