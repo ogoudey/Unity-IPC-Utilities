@@ -1,7 +1,9 @@
+using System;
+
 [Serializable]
 public class InputMsg
 {
-    public string func;
+    public string method;
     public string arg;
 }
 
@@ -9,5 +11,5 @@ public class InputMsg
 public class OutputMsg
 {
     public string type;
-    public string content;
+    public string[] content;
 }

@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.AI;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System;
+using System.Text;
 
 [RequireComponent(typeof(NavMeshAgent))]
 public class MoveTo : MonoBehaviour
@@ -21,7 +23,7 @@ public class MoveTo : MonoBehaviour
 
 
     // Communication
-    public int port = 5000;
+    public int port = 5006;
     private JsonTcpServer server;
     private ConcurrentQueue<InputMsg> inboundMessageQueue = new();
     private ConcurrentQueue<OutputMsg> outboundMessageQueue = new();
@@ -52,9 +54,24 @@ public class MoveTo : MonoBehaviour
         server.Start();
     }
 
-    string getDestinations()
+    string[] GetDestinations()
     {
-        return destinations.ToString();
+        string[] names = new string[destinations.Count];
+
+        for (int i = 0; i < destinations.Count; i++)
+        {
+            names[i] = destinations[i].name;
+        }
+
+        return names;
+    }
+    string[] GetFunctions()
+    {
+        string[] functionNames = new string[] {"SetGoalTo", "GetDestinations"};
+
+        
+
+        return functionNames;
     }
 
     void Update()
@@ -62,15 +79,29 @@ public class MoveTo : MonoBehaviour
         // Communications
         while (inboundMessageQueue.TryDequeue(out var msg))
         {
-            Debug.Log($"Received func={msg.func}, y={msg.arg}");
-            if (msg.x == "updateGoal")
+            Debug.Log($"Received method={msg.method}, arg={msg.arg}");
+            if (msg.method == "SetGoalTo")
             {
-                currentGoal = msg.y;
-                outboundMessageQueue.enqueue(new OutputMsg { type = "status", content = "Goal updated" });
+                currentGoal = currentGoal = destinations.Find(t => t.name == msg.arg);
+                if (currentGoal == null)
+                {
+                    outboundMessageQueue.Enqueue(new OutputMsg { type = "status", content = new string[] { "could not find destination" } });
+                }
+                else
+                {
+                    outboundMessageQueue.Enqueue(new OutputMsg { type = "status", content = new string[] { "goal updated" } });
+                }
+                
             }
-            if (msg.x == "getDestinations")
+            if (msg.method == "GetDestinations")
             {
-                outboundMessageQueue.enqueue(new OutputMsg { type = "destinations", content = getDestinations() });
+                UnityEngine.Debug.Log($"getting Destinations...");
+                outboundMessageQueue.Enqueue(new OutputMsg { type = "destinations", content = GetDestinations() });
+            }
+            if (msg.method == "GetFunctions")
+            {
+                UnityEngine.Debug.Log($"getting Functions...");
+                outboundMessageQueue.Enqueue(new OutputMsg { type = "functions", content = GetFunctions() });
             }
         }
 

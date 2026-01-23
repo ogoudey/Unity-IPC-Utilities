@@ -1,10 +1,14 @@
+using UnityEngine;
+using UnityEngine.AI;
+using UnityEditor;
 using System;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-
+using System.Collections;
+using System.Collections.Concurrent;
 public class JsonTcpServer
 {
     public event Action<InputMsg> OnMessageReceived;
@@ -13,6 +17,8 @@ public class JsonTcpServer
     private Thread listenerThread;
     private bool isRunning;
     private readonly int port;
+
+    public ConcurrentQueue<OutputMsg> outboundMessageQueue;
 
     public JsonTcpServer(int port, ConcurrentQueue<OutputMsg> obmq)
     {
@@ -36,10 +42,6 @@ public class JsonTcpServer
     public void Update()
     {
         // Why not output the outboundMessageQueue here?
-        while (outboundMessageQueue.TryDequeue(out var msg))
-        {
-            msg
-        }
     }
 
     public void Stop()
@@ -59,6 +61,7 @@ public class JsonTcpServer
             try
             {
                 var client = listener.AcceptTcpClient();
+                UnityEngine.Debug.Log("Accepted Client.");
                 Thread t = new Thread(() => HandleClient(client));
                 t.IsBackground = true;
                 t.Start();
@@ -78,13 +81,14 @@ public class JsonTcpServer
         using (var writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true })
         {
             // Start reader and write threads
-            Thread reader = new Thread(() => Reader(client, reader));
-            reader.IsBackground = true;
-            reader.Start();
-            Thread reader = new Thread(() => Writer(client, writer));
-            reader.IsBackground = true;
-            reader.Start();
+            Thread read_t = new Thread(() => Reader(client, reader));
+            read_t.IsBackground = true;
+            read_t.Start();
+            Thread write_t = new Thread(() => Writer(client, writer));
+            write_t.IsBackground = true;
+            write_t.Start();
             // keep client, etc. open
+            UnityEngine.Debug.Log($"Threads started.");
             while (isRunning && client.Connected) // Unity-side stop and Python-side stop, respectively
             {
                 // wait? pass?
@@ -97,13 +101,15 @@ public class JsonTcpServer
     {
         while (isRunning && client.Connected)
         {
-            while (inboundMessageQueue.TryDequeue(out var response))
+            while (outboundMessageQueue.TryDequeue(out var response))
             {
                 string jsonResponse = JsonUtility.ToJson(response) + "\n";
                 Debug.Log($"Sending: {jsonResponse}");
                 writer.WriteLine(jsonResponse);
+                Debug.Log($"Sent: {jsonResponse}");
             }
         }
+        UnityEngine.Debug.Log($"Writer ended.");
     }
 
     private void Reader(TcpClient client, StreamReader reader)
@@ -114,13 +120,14 @@ public class JsonTcpServer
             try
             {
                 line = reader.ReadLine();
-                if (line == null) break;
+                if (line == null) continue;
+                if (line == "") continue;
             }
             catch
             {
-                break;
+                continue;
             }
-
+            UnityEngine.Debug.Log($"Got {line}");
             InputMsg msg;
             try
             {
@@ -131,8 +138,9 @@ public class JsonTcpServer
                 continue;
             }
 
-            // Notify Unity side (optional?)
+            UnityEngine.Debug.Log($"Reader sees {msg.method}({msg.arg}).");
             OnMessageReceived?.Invoke(msg);
         }
+        UnityEngine.Debug.Log($"Reader ended.");
     }
 }
