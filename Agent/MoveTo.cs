@@ -17,7 +17,7 @@ public class MoveTo : MonoBehaviour
 
     [Header("Movement")]
     public float reachDistance = 1.0f;
-
+    public bool sentReachedStatus = false;
     private NavMeshAgent agent;
     private Transform lastGoal;
 
@@ -125,6 +125,10 @@ public class MoveTo : MonoBehaviour
         {
             OnReachedGoal();
         }
+        else
+        {
+            sentReachedStatus = false;
+        }
     }
 
     public void SetDestination(Transform goal)
@@ -143,12 +147,18 @@ public class MoveTo : MonoBehaviour
 
         lastGoal = currentGoal;
 
-        agent.ResetPath();                 // IMPORTANT
+        agent.ResetPath();
         agent.SetDestination(currentGoal.position);
     }
 
     private void OnReachedGoal()
     {
-        // Hook for patrol / idle / next goal
+        if (sentReachedStatus == false)
+        {
+            outboundMessageQueue.Enqueue(new OutputMsg { type = "status", content = new string[] { $"reached destination {currentGoal.name}" } });
+            sentReachedStatus = true;
+        }
+        
+        
     } 
 }
