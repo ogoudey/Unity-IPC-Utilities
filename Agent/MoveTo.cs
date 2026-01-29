@@ -82,14 +82,14 @@ public class MoveTo : MonoBehaviour
             Debug.Log($"Received method={msg.method}, arg={msg.arg}");
             if (msg.method == "SetGoalTo")
             {
-                currentGoal = currentGoal = destinations.Find(t => t.name == msg.arg);
+                currentGoal = destinations.Find(t => t.name == msg.arg);
                 if (currentGoal == null)
                 {
                     outboundMessageQueue.Enqueue(new OutputMsg { type = "status", content = new string[] { "could not find destination" } });
                 }
                 else
                 {
-                    outboundMessageQueue.Enqueue(new OutputMsg { type = "status", content = new string[] { "goal updated" } });
+                    outboundMessageQueue.Enqueue(new OutputMsg { type = "status", content = new string[] { $"goal set to {currentGoal.name}. Travelling..." } });
                 }
                 
             }
