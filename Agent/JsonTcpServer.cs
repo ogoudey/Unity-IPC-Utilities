@@ -104,9 +104,9 @@ public class JsonTcpServer
             while (outboundMessageQueue.TryDequeue(out var response))
             {
                 string jsonResponse = JsonUtility.ToJson(response) + "\n";
-                Debug.Log($"Sending: {jsonResponse}");
+                //Debug.Log($"Sending: {jsonResponse}");
                 writer.WriteLine(jsonResponse);
-                Debug.Log($"Sent: {jsonResponse}");
+                //Debug.Log($"Sent: {jsonResponse}");
             }
         }
         UnityEngine.Debug.Log($"Writer ended.");
@@ -127,7 +127,7 @@ public class JsonTcpServer
             {
                 continue;
             }
-            UnityEngine.Debug.Log($"Got {line}");
+            //UnityEngine.Debug.Log($"Got {line}");
             InputMsg msg;
             try
             {
@@ -138,7 +138,7 @@ public class JsonTcpServer
                 continue;
             }
 
-            UnityEngine.Debug.Log($"Reader sees {msg.method}({msg.arg}).");
+            //UnityEngine.Debug.Log($"Reader sees {msg.method}({msg.arg}).");
             OnMessageReceived?.Invoke(msg);
         }
         UnityEngine.Debug.Log($"Reader ended.");

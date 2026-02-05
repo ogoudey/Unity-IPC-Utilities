@@ -16,7 +16,7 @@ public class MoveTo : MonoBehaviour
     public Transform currentGoal;
 
     [Header("Movement")]
-    public float reachDistance = 1.0f;
+    public float reachedDistance = 1.0f;
     public bool sentReachedStatus = false;
     private NavMeshAgent agent;
     private Transform lastGoal;
@@ -32,7 +32,7 @@ public class MoveTo : MonoBehaviour
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
-        agent.stoppingDistance = reachDistance;
+        agent.stoppingDistance = reachedDistance;
     }
 
     void Start()
@@ -79,7 +79,7 @@ public class MoveTo : MonoBehaviour
         // Communications
         while (inboundMessageQueue.TryDequeue(out var msg))
         {
-            Debug.Log($"Received method={msg.method}, arg={msg.arg}");
+            //Debug.Log($"Received method={msg.method}, arg={msg.arg}");
             if (msg.method == "SetGoalTo")
             {
                 currentGoal = destinations.Find(t => t.name == msg.arg);
