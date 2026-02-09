@@ -2,7 +2,7 @@
 
 ## Easy to use
 1. `git clone` to any location
-2. Hard link scripts to somewhere in a Unity project's `Assets` folder with `./symlink_all <source_dir> <target_dir>.
+2. Hard link scripts to somewhere in a Unity project's `Assets` folder with `./symlink_all <source_dir> <target_dir>`.
 
 ### Notes
 - Edit IP addresses manually
