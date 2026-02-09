@@ -89,7 +89,7 @@ public class MoveTo : MonoBehaviour
                 }
                 else
                 {
-                    outboundMessageQueue.Enqueue(new OutputMsg { type = "status", content = new string[] { $"goal set to {currentGoal.name}. Travelling..." } });
+                    outboundMessageQueue.Enqueue(new OutputMsg { type = "status", content = new string[] { $"goal set {currentGoal.name}. Travelling..." } });
                 }
                 
             }
@@ -155,7 +155,7 @@ public class MoveTo : MonoBehaviour
     {
         if (sentReachedStatus == false)
         {
-            outboundMessageQueue.Enqueue(new OutputMsg { type = "status", content = new string[] { $"reached destination {currentGoal.name}" } });
+            outboundMessageQueue.Enqueue(new OutputMsg { type = "status", content = new string[] { $"reached {currentGoal.name}" } });
             sentReachedStatus = true;
         }
         
