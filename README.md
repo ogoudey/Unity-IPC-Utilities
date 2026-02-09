@@ -7,7 +7,7 @@
 ### Notes
 - Edit IP addresses manually
 - Don't access the `transform` of the VR's `Camera` object (use the parent)
-- Test with [https://github.com/ogoudey/lerobot](my fork of LeRobot) by running (from root):
+- Test with [my fork of LeRobot](https://github.com/ogoudey/lerobot) by running (from root) (outdated):
 ```python
 import custom_brains.vla_interface as i
 r = i.create_raw_teleop_mock(True) # True has the mock teleop use a default camera at `/dev/video0`
